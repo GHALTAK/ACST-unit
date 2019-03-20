@@ -1,0 +1,62 @@
+1.
+P<-function(c,f,n,y){
+  for (i in seq(0.5,(n-0.5),0.5)) {
+     a=exp(-y[i]*i)
+  }
+   a=c*a+f*exp(-y[n]*n)
+  print(a)
+}
+
+3. 
+(a)
+
+sin<-read.csv(file = "singapore.economy.csv",header = TRUE)
+library(tidyverse)
+library(pander)
+
+(b)
+
+sin<-na.omit(sin)
+
+(c)
+
+ggplot(sin,aes(x=time,y=gdp))+geom_point()+xlab('TIME')+ylab('GDP(%)')+ggtitle('Singapore GDP growth')+ 
+  scale_y_continuous(breaks = seq(-4,8, by = 2))+ scale_x_continuous(breaks = seq(1990,2018 ,by = 2))
+
+
+(d)
+
+sin<-sin%>%mutate(period=as.factor(period))
+sin%>%group_by(period)%>%summarize(mean=mean(gdp),Std=sd(gdp))%>%pander(caption ="stat.table")
+
+
+
+pairs(sin[,3:10])
+
+(f)
+
+lm(gdp~exp,data=sin)%>%summary()%>%pander()
+
+
+(g)
+
+lm(gdp~exp+epg+hpr+oil+gdpus+crd,data=sin)%>%summary()%>%pander()
+
+
+
+(h)
+
+sin<-sin%>%mutate(state=cut(sin$gdp,
+                            breaks = c(min(sin$gdp)-1,quantile(sin$gdp,probs = c(0.05)),max(sin$gdp)+1),
+              labels = c("crisis","normal")))
+
+
+
+sin.train<-sin%>%filter(time<2007)
+sin.test<-sin%>%filter(time>2007)
+logit<-glm(state~bci,data=sin.train,family =binomial("logit"))
+
+predlogit<-predict(logit,newdata=sin.test,type="response")
+
+table(sin.test$state, predlogit > 0.5)%>%pander(caption="confusion matrix")
+
